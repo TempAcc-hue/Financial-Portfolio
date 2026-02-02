@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Management Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Cormorant+Garamond:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+<div class="dashboard-grid">
+    <!-- Header -->
+    <div class="grid-span-12 flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-light serif">Portfolio Dashboard</h1>
+        <button class="btn btn-primary" onclick="openAddAssetModal()">+ Add Asset</button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="card grid-span-4">
+        <div class="text-xs text-secondary uppercase tracking-wider mb-4">Total Value</div>
+        <div class="stat-value serif" id="totalValue">$0.00</div>
+    </div>
+
+    <div class="card grid-span-4">
+        <div class="text-xs text-secondary uppercase tracking-wider mb-4">Total Assets</div>
+        <div class="stat-value serif" id="totalAssets">0</div>
+    </div>
+
+    <div class="card grid-span-4">
+        <div class="text-xs text-secondary uppercase tracking-wider mb-4">Gain/Loss</div>
+        <div class="stat-value serif" id="totalGainLoss">$0.00</div>
+    </div>
+
+    <!-- Charts -->
+    <div class="card grid-span-6">
+        <div class="text-xs text-secondary uppercase tracking-wider mb-4">Allocation by Type</div>
+        <div style="height: 300px;">
+            <canvas id="allocationChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card grid-span-6">
+        <div class="text-xs text-secondary uppercase tracking-wider mb-4">Value by Type</div>
+        <div style="height: 300px;">
+            <canvas id="valueChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Price Timeline Chart -->
+    <div class="card grid-span-12">
+        <div class="text-xs text-secondary uppercase tracking-wider mb-4">Purchase Price Timeline</div>
+        <div style="height: 400px;">
+            <canvas id="priceTimelineChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Assets Table -->
+    <div class="card grid-span-12">
+        <div class="text-xs text-secondary uppercase tracking-wider mb-4">Asset Holdings</div>
+        <div>
+            <div class="asset-row asset-header">
+                <div>Name/Ticker</div>
+                <div>Type</div>
+                <div>Quantity</div>
+                <div>Purchase Price</div>
+                <div>Total Value</div>
+                <div>Actions</div>
+            </div>
+            <div id="assetsTableBody"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Asset Modal -->
+<div id="addAssetModal" class="modal">
+    <div class="modal-content">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl serif">Add New Asset</h2>
+            <button onclick="closeAddAssetModal()" class="text-2xl text-secondary">&times;</button>
+        </div>
+
+        <form id="addAssetForm" onsubmit="handleAddAsset(event)">
+            <div class="form-group">
+                <label class="form-label">Asset Type</label>
+                <select id="assetType" class="form-select" required>
+                    <option value="STOCK">Stock</option>
+                    <option value="BOND">Bond</option>
+                    <option value="ETF">ETF</option>
+                    <option value="MUTUAL_FUND">Mutual Fund</option>
+                    <option value="CRYPTO">Cryptocurrency</option>
+                    <option value="REAL_ESTATE">Real Estate</option>
+                    <option value="CASH">Cash</option>
+                    <option value="COMMODITY">Commodity</option>
+                    <option value="OPTIONS">Options</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Name/Ticker</label>
+                <input type="text" id="nameOrTicker" class="form-input" required placeholder="e.g., AAPL, Bitcoin, etc.">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Quantity</label>
+                <input type="number" id="quantity" class="form-input" step="0.00000001" required placeholder="Number of shares/units">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Purchase Price</label>
+                <input type="number" id="purchasePrice" class="form-input" step="0.01" required placeholder="Price per unit">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Purchase Date (Optional)</label>
+                <input type="date" id="purchaseDate" class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Notes (Optional)</label>
+                <input type="text" id="notes" class="form-input" placeholder="Additional information">
+            </div>
+
+            <div class="flex gap-4">
+                <button type="submit" class="btn btn-primary flex-1">Add Asset</button>
+                <button type="button" onclick="closeAddAssetModal()" class="btn flex-1">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="scripts/scripts.js"></script>
+</body>
+</html>

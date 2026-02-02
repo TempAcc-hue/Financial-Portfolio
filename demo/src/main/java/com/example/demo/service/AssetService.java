@@ -32,4 +32,12 @@ public class AssetService {
         // Citation: - API allows retrieving records
         return assetRepository.findAll();
     }
+
+    public boolean deleteAsset(Long id) {
+        if (assetRepository.existsById(id)) {
+            assetRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
 }
