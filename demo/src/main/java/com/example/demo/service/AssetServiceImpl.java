@@ -1,10 +1,9 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.AssetDTO;
-import com.example.demo.entity.Asset;
-import com.example.demo.entity.AssetType;
+import com.example.demo.entity.*;
 import com.example.demo.exception.ResourceNotFoundException;
-import com.example.demo.repository.AssetRepository;
+import com.example.demo.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,11 +11,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
- * Implementation of AssetService with business logic.
+ * Implementation of AssetService with support for multiple asset types.
+ * Uses polymorphic queries across all asset repositories.
  */
 @Service
 @RequiredArgsConstructor
@@ -24,13 +25,29 @@ import java.util.stream.Collectors;
 @Transactional
 public class AssetServiceImpl implements AssetService {
 
-    private final AssetRepository assetRepository;
+    private final StockRepository stockRepository;
+    private final BondRepository bondRepository;
+    private final EtfRepository etfRepository;
+    private final MutualFundRepository mutualFundRepository;
+    private final CryptoRepository cryptoRepository;
+    private final RealEstateRepository realEstateRepository;
+    private final CashRepository cashRepository;
     private final StockPriceService stockPriceService;
 
     @Override
     @Transactional(readOnly = true)
     public List<AssetDTO> getAllAssets() {
-        return assetRepository.findAll().stream()
+        List<BaseAsset> allAssets = new ArrayList<>();
+
+        allAssets.addAll(stockRepository.findAll());
+        allAssets.addAll(bondRepository.findAll());
+        allAssets.addAll(etfRepository.findAll());
+        allAssets.addAll(mutualFundRepository.findAll());
+        allAssets.addAll(cryptoRepository.findAll());
+        allAssets.addAll(realEstateRepository.findAll());
+        allAssets.addAll(cashRepository.findAll());
+
+        return allAssets.stream()
                 .map(this::enrichAssetDTO)
                 .collect(Collectors.toList());
     }
@@ -38,15 +55,24 @@ public class AssetServiceImpl implements AssetService {
     @Override
     @Transactional(readOnly = true)
     public AssetDTO getAssetById(Long id) {
-        Asset asset = assetRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Asset", "id", id));
+        BaseAsset asset = findAssetById(id);
         return enrichAssetDTO(asset);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<AssetDTO> getAssetsByType(AssetType type) {
-        return assetRepository.findByType(type).stream()
+        List<? extends BaseAsset> assets = switch (type) {
+            case STOCK -> stockRepository.findAll();
+            case BOND -> bondRepository.findAll();
+            case ETF -> etfRepository.findAll();
+            case MUTUAL_FUND -> mutualFundRepository.findAll();
+            case CRYPTO -> cryptoRepository.findAll();
+            case REAL_ESTATE -> realEstateRepository.findAll();
+            case CASH -> cashRepository.findAll();
+        };
+
+        return assets.stream()
                 .map(this::enrichAssetDTO)
                 .collect(Collectors.toList());
     }
@@ -58,13 +84,23 @@ public class AssetServiceImpl implements AssetService {
             return getAllAssets();
         }
 
-        // Search by symbol and name, combine results
-        List<Asset> bySymbol = assetRepository.findBySymbolContainingIgnoreCase(query);
-        List<Asset> byName = assetRepository.findByNameContainingIgnoreCase(query);
+        Set<BaseAsset> combined = new LinkedHashSet<>();
 
-        // Combine and deduplicate
-        java.util.Set<Asset> combined = new java.util.LinkedHashSet<>(bySymbol);
-        combined.addAll(byName);
+        // Search across all repositories
+        combined.addAll(stockRepository.findBySymbolContainingIgnoreCase(query));
+        combined.addAll(stockRepository.findByNameContainingIgnoreCase(query));
+        combined.addAll(bondRepository.findBySymbolContainingIgnoreCase(query));
+        combined.addAll(bondRepository.findByNameContainingIgnoreCase(query));
+        combined.addAll(etfRepository.findBySymbolContainingIgnoreCase(query));
+        combined.addAll(etfRepository.findByNameContainingIgnoreCase(query));
+        combined.addAll(mutualFundRepository.findBySymbolContainingIgnoreCase(query));
+        combined.addAll(mutualFundRepository.findByNameContainingIgnoreCase(query));
+        combined.addAll(cryptoRepository.findBySymbolContainingIgnoreCase(query));
+        combined.addAll(cryptoRepository.findByNameContainingIgnoreCase(query));
+        combined.addAll(realEstateRepository.findBySymbolContainingIgnoreCase(query));
+        combined.addAll(realEstateRepository.findByNameContainingIgnoreCase(query));
+        combined.addAll(cashRepository.findBySymbolContainingIgnoreCase(query));
+        combined.addAll(cashRepository.findByNameContainingIgnoreCase(query));
 
         return combined.stream()
                 .map(this::enrichAssetDTO)
@@ -73,50 +109,151 @@ public class AssetServiceImpl implements AssetService {
 
     @Override
     public AssetDTO createAsset(AssetDTO assetDTO) {
-        Asset asset = Asset.builder()
-                .symbol(assetDTO.getSymbol().toUpperCase().trim())
-                .name(assetDTO.getName().trim())
-                .type(assetDTO.getType())
-                .quantity(assetDTO.getQuantity())
-                .buyPrice(assetDTO.getBuyPrice())
-                .purchaseDate(assetDTO.getPurchaseDate())
-                .build();
+        BaseAsset saved = switch (assetDTO.getType()) {
+            case STOCK -> stockRepository.save(Stock.builder()
+                    .symbol(assetDTO.getSymbol().toUpperCase().trim())
+                    .name(assetDTO.getName().trim())
+                    .quantity(assetDTO.getQuantity())
+                    .buyPrice(assetDTO.getBuyPrice())
+                    .purchaseDate(assetDTO.getPurchaseDate())
+                    .build());
+            case BOND -> bondRepository.save(Bond.builder()
+                    .symbol(assetDTO.getSymbol().toUpperCase().trim())
+                    .name(assetDTO.getName().trim())
+                    .quantity(assetDTO.getQuantity())
+                    .buyPrice(assetDTO.getBuyPrice())
+                    .purchaseDate(assetDTO.getPurchaseDate())
+                    .build());
+            case ETF -> etfRepository.save(Etf.builder()
+                    .symbol(assetDTO.getSymbol().toUpperCase().trim())
+                    .name(assetDTO.getName().trim())
+                    .quantity(assetDTO.getQuantity())
+                    .buyPrice(assetDTO.getBuyPrice())
+                    .purchaseDate(assetDTO.getPurchaseDate())
+                    .build());
+            case MUTUAL_FUND -> mutualFundRepository.save(MutualFund.builder()
+                    .symbol(assetDTO.getSymbol().toUpperCase().trim())
+                    .name(assetDTO.getName().trim())
+                    .quantity(assetDTO.getQuantity())
+                    .buyPrice(assetDTO.getBuyPrice())
+                    .purchaseDate(assetDTO.getPurchaseDate())
+                    .build());
+            case CRYPTO -> cryptoRepository.save(Crypto.builder()
+                    .symbol(assetDTO.getSymbol().toUpperCase().trim())
+                    .name(assetDTO.getName().trim())
+                    .quantity(assetDTO.getQuantity())
+                    .buyPrice(assetDTO.getBuyPrice())
+                    .purchaseDate(assetDTO.getPurchaseDate())
+                    .build());
+            case REAL_ESTATE -> realEstateRepository.save(RealEstate.builder()
+                    .symbol(assetDTO.getSymbol().toUpperCase().trim())
+                    .name(assetDTO.getName().trim())
+                    .quantity(assetDTO.getQuantity())
+                    .buyPrice(assetDTO.getBuyPrice())
+                    .purchaseDate(assetDTO.getPurchaseDate())
+                    .build());
+            case CASH -> cashRepository.save(Cash.builder()
+                    .symbol(assetDTO.getSymbol().toUpperCase().trim())
+                    .name(assetDTO.getName().trim())
+                    .quantity(assetDTO.getQuantity())
+                    .buyPrice(assetDTO.getBuyPrice())
+                    .purchaseDate(assetDTO.getPurchaseDate())
+                    .build());
+        };
 
-        Asset saved = assetRepository.save(asset);
-        log.info("Created new asset: {} ({})", saved.getName(), saved.getSymbol());
+        log.info("Created new {} asset: {} ({})", saved.getType(), saved.getName(), saved.getSymbol());
         return enrichAssetDTO(saved);
     }
 
     @Override
     public AssetDTO updateAsset(Long id, AssetDTO assetDTO) {
-        Asset existing = assetRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Asset", "id", id));
+        BaseAsset existing = findAssetById(id);
 
         existing.setSymbol(assetDTO.getSymbol().toUpperCase().trim());
         existing.setName(assetDTO.getName().trim());
-        existing.setType(assetDTO.getType());
         existing.setQuantity(assetDTO.getQuantity());
         existing.setBuyPrice(assetDTO.getBuyPrice());
         existing.setPurchaseDate(assetDTO.getPurchaseDate());
 
-        Asset updated = assetRepository.save(existing);
-        log.info("Updated asset: {} (ID: {})", updated.getName(), updated.getId());
+        BaseAsset updated = saveAsset(existing);
+        log.info("Updated {} asset: {} (ID: {})", updated.getType(), updated.getName(), updated.getId());
         return enrichAssetDTO(updated);
     }
 
     @Override
     public void deleteAsset(Long id) {
-        Asset asset = assetRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Asset", "id", id));
-
-        assetRepository.delete(asset);
-        log.info("Deleted asset: {} (ID: {})", asset.getName(), id);
+        BaseAsset asset = findAssetById(id);
+        deleteAssetEntity(asset);
+        log.info("Deleted {} asset: {} (ID: {})", asset.getType(), asset.getName(), id);
     }
 
     /**
-     * Convert Asset entity to DTO and enrich with current price data.
+     * Find asset by ID across all repositories.
      */
-    private AssetDTO enrichAssetDTO(Asset asset) {
+    private BaseAsset findAssetById(Long id) {
+        return Stream.<Optional<? extends BaseAsset>>of(
+                stockRepository.findById(id),
+                bondRepository.findById(id),
+                etfRepository.findById(id),
+                mutualFundRepository.findById(id),
+                cryptoRepository.findById(id),
+                realEstateRepository.findById(id),
+                cashRepository.findById(id))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Asset", "id", id));
+    }
+
+    /**
+     * Save asset to appropriate repository.
+     */
+    private BaseAsset saveAsset(BaseAsset asset) {
+        if (asset instanceof Stock s) {
+            return stockRepository.save(s);
+        } else if (asset instanceof Bond b) {
+            return bondRepository.save(b);
+        } else if (asset instanceof Etf e) {
+            return etfRepository.save(e);
+        } else if (asset instanceof MutualFund m) {
+            return mutualFundRepository.save(m);
+        } else if (asset instanceof Crypto c) {
+            return cryptoRepository.save(c);
+        } else if (asset instanceof RealEstate r) {
+            return realEstateRepository.save(r);
+        } else if (asset instanceof Cash c) {
+            return cashRepository.save(c);
+        }
+        throw new IllegalStateException("Unknown asset type: " + asset.getClass());
+    }
+
+    /**
+     * Delete asset from appropriate repository.
+     */
+    private void deleteAssetEntity(BaseAsset asset) {
+        if (asset instanceof Stock s) {
+            stockRepository.delete(s);
+        } else if (asset instanceof Bond b) {
+            bondRepository.delete(b);
+        } else if (asset instanceof Etf e) {
+            etfRepository.delete(e);
+        } else if (asset instanceof MutualFund m) {
+            mutualFundRepository.delete(m);
+        } else if (asset instanceof Crypto c) {
+            cryptoRepository.delete(c);
+        } else if (asset instanceof RealEstate r) {
+            realEstateRepository.delete(r);
+        } else if (asset instanceof Cash c) {
+            cashRepository.delete(c);
+        } else {
+            throw new IllegalStateException("Unknown asset type: " + asset.getClass());
+        }
+    }
+
+    /**
+     * Convert BaseAsset entity to DTO and enrich with current price data.
+     */
+    private AssetDTO enrichAssetDTO(BaseAsset asset) {
         AssetDTO dto = AssetDTO.builder()
                 .id(asset.getId())
                 .symbol(asset.getSymbol())
@@ -148,21 +285,23 @@ public class AssetServiceImpl implements AssetService {
                     dto.setGainLossPercentage(gainLossPercentage);
                 }
             } else {
-                // Fall back to buy price as current price
-                dto.setCurrentPrice(asset.getBuyPrice());
-                dto.setCurrentValue(asset.getCostBasis());
-                dto.setGainLoss(BigDecimal.ZERO);
-                dto.setGainLossPercentage(BigDecimal.ZERO);
+                setDefaultPricing(dto, asset);
             }
         } else {
-            // For BOND, CASH, REAL_ESTATE - use buy price as current value
-            dto.setCurrentPrice(asset.getBuyPrice());
-            dto.setCurrentValue(asset.getCostBasis());
-            dto.setGainLoss(BigDecimal.ZERO);
-            dto.setGainLossPercentage(BigDecimal.ZERO);
+            setDefaultPricing(dto, asset);
         }
 
         return dto;
+    }
+
+    /**
+     * Set default pricing when live price is not available.
+     */
+    private void setDefaultPricing(AssetDTO dto, BaseAsset asset) {
+        dto.setCurrentPrice(asset.getBuyPrice());
+        dto.setCurrentValue(asset.getCostBasis());
+        dto.setGainLoss(BigDecimal.ZERO);
+        dto.setGainLossPercentage(BigDecimal.ZERO);
     }
 
     /**
