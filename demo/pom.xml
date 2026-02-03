@@ -65,13 +65,6 @@
 			<version>2.3.0</version>
 		</dependency>
 
-		<!-- Yahoo Finance API for stock prices -->
-		<dependency>
-			<groupId>com.yahoofinance-api</groupId>
-			<artifactId>YahooFinanceAPI</artifactId>
-			<version>3.17.0</version>
-		</dependency>
-
 		<!-- Testing Dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

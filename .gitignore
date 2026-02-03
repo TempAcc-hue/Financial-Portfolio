@@ -19,3 +19,7 @@ buildNumber.properties
 .vscode/
 .DS_Store
 .idea/
+
+# Local configuration with secrets (API keys, passwords)
+**/application-local.properties
+**/application-secret.properties
