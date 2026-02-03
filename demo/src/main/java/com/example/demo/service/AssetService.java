@@ -1,43 +1,47 @@
 package com.example.demo.service;
 
-import com.example.demo.model.Asset;
-import com.example.demo.repository.AssetRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import com.example.demo.dto.AssetDTO;
+import com.example.demo.entity.AssetType;
 
-import java.time.LocalDate;
 import java.util.List;
 
-@Service
-public class AssetService {
+/**
+ * Service interface for Asset CRUD operations.
+ */
+public interface AssetService {
 
-    private final AssetRepository assetRepository;
+    /**
+     * Get all assets in the portfolio.
+     */
+    List<AssetDTO> getAllAssets();
 
-    @Autowired
-    public AssetService(AssetRepository assetRepository) {
-        this.assetRepository = assetRepository;
-    }
+    /**
+     * Get an asset by its ID.
+     */
+    AssetDTO getAssetById(Long id);
 
-    public Asset addAsset(Asset asset) {
-        // Best Practice: Validation or default setting before saving
-        if (asset.getPurchaseDate() == null) {
-            asset.setPurchaseDate(LocalDate.now());
-        }
+    /**
+     * Get assets filtered by type.
+     */
+    List<AssetDTO> getAssetsByType(AssetType type);
 
-        return assetRepository.save(asset);
-    }
+    /**
+     * Search assets by symbol or name.
+     */
+    List<AssetDTO> searchAssets(String query);
 
+    /**
+     * Create a new asset.
+     */
+    AssetDTO createAsset(AssetDTO assetDTO);
 
-    public List<Asset> getAllAssets() {
-        // Citation: - API allows retrieving records
-        return assetRepository.findAll();
-    }
+    /**
+     * Update an existing asset.
+     */
+    AssetDTO updateAsset(Long id, AssetDTO assetDTO);
 
-    public boolean deleteAsset(Long id) {
-        if (assetRepository.existsById(id)) {
-            assetRepository.deleteById(id);
-            return true;
-        }
-        return false;
-    }
+    /**
+     * Delete an asset by ID.
+     */
+    void deleteAsset(Long id);
 }
