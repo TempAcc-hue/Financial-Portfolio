@@ -433,6 +433,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // CSV upload controls
+    const csvFileInput = document.getElementById('csv-file-input');
+    const uploadCsvBtn = document.getElementById('upload-csv-btn');
+
+    // Clicking the upload button triggers the file chooser
+    uploadCsvBtn.addEventListener('click', () => csvFileInput.click());
+
+    // When a file is selected, perform upload
+    csvFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        // Basic client-side validation
+        if (!file.name.toLowerCase().endsWith('.csv')) {
+            showToast('Please select a CSV file', 'error');
+            return;
+        }
+
+        try {
+            uploadCsvBtn.disabled = true;
+            uploadCsvBtn.textContent = 'Uploading...';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const resp = await fetch(`${API_BASE_URL}/assets/upload`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await resp.json();
+            if (resp.ok && result && result.success) {
+                showToast(result.message || 'CSV imported successfully', 'success');
+                // refresh portfolio
+                loadPortfolioData();
+            } else {
+                showToast((result && result.message) || 'Failed to import CSV', 'error');
+            }
+        } catch (err) {
+            console.error('CSV upload failed', err);
+            showToast('CSV upload failed', 'error');
+        } finally {
+            uploadCsvBtn.disabled = false;
+            uploadCsvBtn.textContent = 'Upload CSV';
+            csvFileInput.value = null; // reset input
+        }
+    });
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {

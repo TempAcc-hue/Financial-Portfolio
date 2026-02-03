@@ -112,9 +112,14 @@
                         <option value="REAL_ESTATE">Real Estate</option>
                         <option value="CASH">Cash</option>
                     </select>
-                    <button id="add-asset-btn" class="btn btn-primary">
-                        <span>+</span> Add Asset
-                    </button>
+                    <div class="action-group">
+                        <label class="file-upload" for="csv-file-input">📁</label>
+                        <input type="file" id="csv-file-input" accept=".csv" style="display:none">
+                        <button id="upload-csv-btn" class="btn btn-secondary" title="Upload CSV">Upload CSV</button>
+                        <button id="add-asset-btn" class="btn btn-primary">
+                            <span>+</span> Add Asset
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="card table-card">

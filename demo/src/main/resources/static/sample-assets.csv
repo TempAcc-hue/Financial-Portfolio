@@ -1,0 +1,5 @@
+symbol,name,type,quantity,buyPrice,purchaseDate
+AAPL,Apple Inc,STOCK,10,150.00,2024-01-15
+NVDA,NVIDIA Corporation,STOCK,5,450.00,2024-02-20
+BTC,Bitcoin,CRYPTO,0.25,30000.00,2023-11-01
+CASH,USD Cash,CASH,1000,1.00,2024-03-01

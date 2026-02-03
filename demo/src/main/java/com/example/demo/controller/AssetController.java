@@ -13,7 +13,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -101,5 +107,87 @@ public class AssetController {
             @Parameter(description = "Asset ID") @PathVariable Long id) {
         assetService.deleteAsset(id);
         return ResponseEntity.ok(ApiResponse.success("Asset deleted successfully", null));
+    }
+
+    /**
+     * Upload CSV file containing assets and import them.
+     * Expected columns (header required): symbol,name,type,quantity,buyPrice,purchaseDate
+     * - type should match AssetType enum values (STOCK, BOND, ...)
+     * - quantity and buyPrice are numeric
+     * - purchaseDate (optional) in ISO format yyyy-MM-dd
+     */
+    @PostMapping("/upload")
+    @Operation(summary = "Upload CSV and import assets")
+    public ResponseEntity<ApiResponse<List<AssetDTO>>> uploadAssets(@RequestParam("file") MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Empty file"));
+        }
+
+        String filename = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
+        List<AssetDTO> created = new ArrayList<>();
+
+        try {
+            if (filename.endsWith(".csv") || filename.endsWith(".txt")) {
+                // simple CSV parse
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+                    String header = reader.readLine();
+                    if (header == null) {
+                        return ResponseEntity.badRequest().body(ApiResponse.error("CSV has no header/rows"));
+                    }
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        String[] cols = line.split(",", -1);
+                        AssetDTO dto = csvRowToDto(cols);
+                        if (dto != null) {
+                            created.add(assetService.createAsset(dto));
+                        }
+                    }
+                }
+            } else {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Unsupported file type. Use CSV (or .txt)"));
+            }
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error("Failed to parse file: " + ex.getMessage()));
+        }
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Imported " + created.size() + " assets", created));
+    }
+
+    // Minimal CSV row -> AssetDTO converter. Returns null for invalid rows.
+    private AssetDTO csvRowToDto(String[] cols) {
+        // Expected columns: symbol,name,type,quantity,buyPrice,purchaseDate
+        if (cols == null || cols.length < 5) return null;
+        try {
+            String symbol = cols[0].trim();
+            String name = cols[1].trim();
+            String typeStr = cols[2].trim().toUpperCase();
+            String qtyStr = cols[3].trim();
+            String buyStr = cols[4].trim();
+            String dateStr = cols.length > 5 ? cols[5].trim() : null;
+
+            if (symbol.isEmpty() || name.isEmpty() || typeStr.isEmpty() || qtyStr.isEmpty() || buyStr.isEmpty()) {
+                return null; // skip incomplete
+            }
+
+            AssetType type = AssetType.valueOf(typeStr);
+            BigDecimal quantity = new BigDecimal(qtyStr);
+            BigDecimal buyPrice = new BigDecimal(buyStr);
+            LocalDate purchaseDate = null;
+            if (dateStr != null && !dateStr.isEmpty()) {
+                purchaseDate = LocalDate.parse(dateStr);
+            }
+
+            return AssetDTO.builder()
+                    .symbol(symbol)
+                    .name(name)
+                    .type(type)
+                    .quantity(quantity)
+                    .buyPrice(buyPrice)
+                    .purchaseDate(purchaseDate)
+                    .build();
+        } catch (Exception ex) {
+            // invalid row, skip
+            return null;
+        }
     }
 }
