@@ -1,11 +1,8 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.AssetDTO;
-import com.example.demo.entity.Asset;
-import com.example.demo.entity.AssetType;
 import com.example.demo.entity.*;
 import com.example.demo.exception.ResourceNotFoundException;
-import com.example.demo.repository.AssetRepository;
 import com.example.demo.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,13 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Implementation of AssetService with business logic.
  * Implementation of AssetService with support for multiple asset types.
  * Uses polymorphic queries across all asset repositories.
  */
@@ -30,7 +25,6 @@ import java.util.stream.Stream;
 @Transactional
 public class AssetServiceImpl implements AssetService {
 
-    private final AssetRepository assetRepository;
     private final StockRepository stockRepository;
     private final BondRepository bondRepository;
     private final EtfRepository etfRepository;
@@ -91,9 +85,6 @@ public class AssetServiceImpl implements AssetService {
         }
 
         Set<BaseAsset> combined = new LinkedHashSet<>();
-        // Search by symbol and name, combine results
-        List<Asset> bySymbol = assetRepository.findBySymbolContainingIgnoreCase(query);
-        List<Asset> byName = assetRepository.findByNameContainingIgnoreCase(query);
 
         // Search across all repositories
         combined.addAll(stockRepository.findBySymbolContainingIgnoreCase(query));
@@ -110,9 +101,6 @@ public class AssetServiceImpl implements AssetService {
         combined.addAll(realEstateRepository.findByNameContainingIgnoreCase(query));
         combined.addAll(cashRepository.findBySymbolContainingIgnoreCase(query));
         combined.addAll(cashRepository.findByNameContainingIgnoreCase(query));
-        // Combine and deduplicate
-        java.util.Set<Asset> combined = new java.util.LinkedHashSet<>(bySymbol);
-        combined.addAll(byName);
 
         return combined.stream()
                 .map(this::enrichAssetDTO)
@@ -183,7 +171,6 @@ public class AssetServiceImpl implements AssetService {
 
         existing.setSymbol(assetDTO.getSymbol().toUpperCase().trim());
         existing.setName(assetDTO.getName().trim());
-        existing.setType(assetDTO.getType());
         existing.setQuantity(assetDTO.getQuantity());
         existing.setBuyPrice(assetDTO.getBuyPrice());
         existing.setPurchaseDate(assetDTO.getPurchaseDate());
@@ -205,13 +192,13 @@ public class AssetServiceImpl implements AssetService {
      */
     private BaseAsset findAssetById(Long id) {
         return Stream.<Optional<? extends BaseAsset>>of(
-                stockRepository.findById(id),
-                bondRepository.findById(id),
-                etfRepository.findById(id),
-                mutualFundRepository.findById(id),
-                cryptoRepository.findById(id),
-                realEstateRepository.findById(id),
-                cashRepository.findById(id))
+                        stockRepository.findById(id),
+                        bondRepository.findById(id),
+                        etfRepository.findById(id),
+                        mutualFundRepository.findById(id),
+                        cryptoRepository.findById(id),
+                        realEstateRepository.findById(id),
+                        cashRepository.findById(id))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .findFirst()
