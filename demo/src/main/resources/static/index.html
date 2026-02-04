@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Portfolio Manager - Track your investments with real-time data and beautiful visualizations">
+    <meta name="description"
+        content="Portfolio Manager - Track your investments with real-time data and beautiful visualizations">
     <title>Portfolio Manager | Dashboard</title>
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- ApexCharts -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.1/dist/apexcharts.min.js"></script>
-    
+
     <!-- Custom Styles -->
     <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="navbar">
@@ -97,6 +100,26 @@
             </div>
         </section>
 
+        <!-- Market News Section -->
+        <section class="section news-section">
+            <div class="section-header">
+                <h2 class="section-title">📰 Market News</h2>
+                <div class="news-tabs">
+                    <button class="news-tab active" data-category="forex">Forex</button>
+                    <button class="news-tab" data-category="crypto">Crypto</button>
+                    <button class="news-tab" data-category="merger">M&A</button>
+                </div>
+            </div>
+            <div class="news-ticker-container">
+                <div id="market-news" class="news-ticker">
+                    <div class="news-loading">
+                        <div class="loading-spinner"></div>
+                        <span>Loading market news...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Assets Table Section -->
         <section id="assets" class="section">
             <div class="section-header">
@@ -162,7 +185,7 @@
             </div>
             <form id="asset-form" class="modal-form">
                 <input type="hidden" id="asset-id">
-                
+
                 <div class="form-row">
                     <div class="form-group">
                         <label for="asset-symbol">Symbol *</label>
@@ -232,6 +255,25 @@
         </div>
     </div>
 
+    <!-- Stock News Modal -->
+    <div id="stock-news-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3><span id="stock-news-symbol">AAPL</span> - Latest News</h3>
+                <button class="modal-close" id="stock-news-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="stock-news-container" class="stock-news-list">
+                    <div class="news-loading">
+                        <div class="loading-spinner"></div>
+                        <span>Loading news...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast" class="toast hidden">
         <span id="toast-message"></span>
@@ -241,4 +283,5 @@
     <script src="js/app.js"></script>
     <script src="js/charts.js"></script>
 </body>
+
 </html>

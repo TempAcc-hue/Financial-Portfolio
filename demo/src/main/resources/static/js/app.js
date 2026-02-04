@@ -52,7 +52,15 @@ const elements = {
 
     // Toast
     toast: document.getElementById('toast'),
-    toastMessage: document.getElementById('toast-message')
+    toastMessage: document.getElementById('toast-message'),
+
+    // News elements
+    marketNews: document.getElementById('market-news'),
+    newsTabs: document.querySelectorAll('.news-tab'),
+    stockNewsModal: document.getElementById('stock-news-modal'),
+    stockNewsSymbol: document.getElementById('stock-news-symbol'),
+    stockNewsContainer: document.getElementById('stock-news-container'),
+    stockNewsModalClose: document.getElementById('stock-news-modal-close')
 };
 
 // State
@@ -208,7 +216,7 @@ function renderAssetsTable(assets) {
 
         return `
             <tr data-id="${asset.id}">
-                <td class="symbol-cell">${asset.symbol}</td>
+                <td class="symbol-cell" onclick="openStockNews('${asset.symbol}')" title="Click for ${asset.symbol} news">${asset.symbol}</td>
                 <td>${truncate(asset.name, 30)}</td>
                 <td><span class="type-badge ${asset.type}">${formatAssetType(asset.type)}</span></td>
                 <td>${formatNumber(asset.quantity)}</td>
@@ -486,6 +494,160 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape') {
             closeModal();
             closeDeleteModal();
+            closeStockNewsModal();
         }
     });
+
+    // ===================================
+    // News Event Listeners
+    // ===================================
+
+    // Load market news on page load
+    loadMarketNews('forex');
+
+    // News tabs
+    elements.newsTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            elements.newsTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            loadMarketNews(tab.dataset.category);
+        });
+    });
+
+    // Stock news modal close
+    if (elements.stockNewsModalClose) {
+        elements.stockNewsModalClose.addEventListener('click', closeStockNewsModal);
+    }
+    if (elements.stockNewsModal) {
+        elements.stockNewsModal.querySelector('.modal-backdrop').addEventListener('click', closeStockNewsModal);
+    }
 });
+
+// ===================================
+// News Functions
+// ===================================
+
+async function loadMarketNews(category = 'general') {
+    if (!elements.marketNews) return;
+
+    elements.marketNews.innerHTML = `
+        <div class="news-loading">
+            <div class="loading-spinner"></div>
+            <span>Loading ${category} news...</span>
+        </div>
+    `;
+
+    try {
+        const response = await api.get(`/news/market?category=${category}`);
+        if (response.success && response.data && response.data.length > 0) {
+            renderMarketNews(response.data);
+        } else {
+            elements.marketNews.innerHTML = '<div class="news-empty">No news available at the moment.</div>';
+        }
+    } catch (error) {
+        console.error('Error loading market news:', error);
+        elements.marketNews.innerHTML = '<div class="news-empty">Failed to load news. Please try again later.</div>';
+    }
+}
+
+function renderMarketNews(newsItems) {
+    elements.marketNews.innerHTML = newsItems.slice(0, 10).map(news => `
+        <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="news-card">
+            ${news.image ?
+            `<img src="${news.image}" alt="" class="news-card-image" onerror="this.classList.add('placeholder'); this.outerHTML='<div class=\\'news-card-image placeholder\\'>📰</div>'">` :
+            '<div class="news-card-image placeholder">📰</div>'
+        }
+            <div class="news-card-content">
+                <div class="news-card-headline">${escapeHtml(news.headline)}</div>
+                <div class="news-card-meta">
+                    <span class="news-card-source">${escapeHtml(news.source || 'News')}</span>
+                    <span class="news-card-time">${formatTimeAgo(news.datetime)}</span>
+                </div>
+            </div>
+        </a>
+    `).join('');
+}
+
+async function loadStockNews(symbol) {
+    if (!elements.stockNewsContainer) return;
+
+    elements.stockNewsContainer.innerHTML = `
+        <div class="news-loading">
+            <div class="loading-spinner"></div>
+            <span>Loading ${symbol} news...</span>
+        </div>
+    `;
+
+    try {
+        const response = await api.get(`/news/company/${symbol}`);
+        if (response.success && response.data && response.data.length > 0) {
+            renderStockNews(response.data);
+        } else {
+            elements.stockNewsContainer.innerHTML = `
+                <div class="news-empty">No recent news found for ${symbol}.</div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading stock news:', error);
+        elements.stockNewsContainer.innerHTML = `
+            <div class="news-empty">Failed to load news for ${symbol}. Please try again later.</div>
+        `;
+    }
+}
+
+function renderStockNews(newsItems) {
+    elements.stockNewsContainer.innerHTML = newsItems.slice(0, 15).map(news => `
+        <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="stock-news-item">
+            ${news.image ?
+            `<img src="${news.image}" alt="" class="stock-news-thumb" onerror="this.style.display='none'">` :
+            ''
+        }
+            <div class="stock-news-info">
+                <div class="stock-news-headline">${escapeHtml(news.headline)}</div>
+                ${news.summary ? `<div class="stock-news-summary">${escapeHtml(truncate(news.summary, 150))}</div>` : ''}
+                <div class="stock-news-meta">
+                    <span class="stock-news-source">${escapeHtml(news.source || 'News')}</span>
+                    <span class="stock-news-time">${formatTimeAgo(news.datetime)}</span>
+                </div>
+            </div>
+        </a>
+    `).join('');
+}
+
+function openStockNewsModal(symbol) {
+    if (!elements.stockNewsModal) return;
+    elements.stockNewsSymbol.textContent = symbol;
+    elements.stockNewsModal.classList.remove('hidden');
+    loadStockNews(symbol);
+}
+
+function closeStockNewsModal() {
+    if (elements.stockNewsModal) {
+        elements.stockNewsModal.classList.add('hidden');
+    }
+}
+
+// Global function for onclick handler
+window.openStockNews = function (symbol) {
+    openStockNewsModal(symbol);
+};
+
+function formatTimeAgo(timestamp) {
+    if (!timestamp) return '';
+
+    const seconds = Math.floor((Date.now() / 1000) - timestamp);
+
+    if (seconds < 60) return 'just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+
+    return new Date(timestamp * 1000).toLocaleDateString();
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
