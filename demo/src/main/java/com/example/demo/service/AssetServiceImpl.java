@@ -192,13 +192,13 @@ public class AssetServiceImpl implements AssetService {
      */
     private BaseAsset findAssetById(Long id) {
         return Stream.<Optional<? extends BaseAsset>>of(
-                stockRepository.findById(id),
-                bondRepository.findById(id),
-                etfRepository.findById(id),
-                mutualFundRepository.findById(id),
-                cryptoRepository.findById(id),
-                realEstateRepository.findById(id),
-                cashRepository.findById(id))
+                        stockRepository.findById(id),
+                        bondRepository.findById(id),
+                        etfRepository.findById(id),
+                        mutualFundRepository.findById(id),
+                        cryptoRepository.findById(id),
+                        realEstateRepository.findById(id),
+                        cashRepository.findById(id))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .findFirst()

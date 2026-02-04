@@ -3,6 +3,8 @@
 -- Run this script to set up the database from scratch
 
 CREATE DATABASE IF NOT EXISTS portfolio_db;
+
+-- Select the database to use
 USE portfolio_db;
 
 -- ============================================
@@ -18,7 +20,7 @@ CREATE TABLE IF NOT EXISTS assets (
     purchase_date DATE COMMENT 'Date of purchase',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
+
     INDEX idx_asset_type (asset_type),
     INDEX idx_symbol (symbol)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -34,7 +36,7 @@ CREATE TABLE IF NOT EXISTS stocks (
     sector VARCHAR(50) COMMENT 'Technology, Healthcare, etc.',
     dividend_yield DECIMAL(5, 2) COMMENT 'Annual dividend yield %',
     market_cap VARCHAR(20) COMMENT 'Large, Mid, Small',
-    
+
     CONSTRAINT fk_stocks_assets FOREIGN KEY (id) REFERENCES assets(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -46,7 +48,7 @@ CREATE TABLE IF NOT EXISTS bonds (
     issuer VARCHAR(100) COMMENT 'Government, Corporate name, etc.',
     bond_type VARCHAR(30) COMMENT 'GOVERNMENT, CORPORATE, MUNICIPAL, TREASURY, AGENCY',
     credit_rating VARCHAR(10) COMMENT 'AAA, AA, A, BBB, etc.',
-    
+
     CONSTRAINT fk_bonds_assets FOREIGN KEY (id) REFERENCES assets(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -58,7 +60,7 @@ CREATE TABLE IF NOT EXISTS etfs (
     category VARCHAR(50) COMMENT 'Index, Sector, Bond, etc.',
     holdings_count INT COMMENT 'Number of holdings in ETF',
     dividend_yield DECIMAL(5, 2) COMMENT 'Annual dividend yield %',
-    
+
     CONSTRAINT fk_etfs_assets FOREIGN KEY (id) REFERENCES assets(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -70,7 +72,7 @@ CREATE TABLE IF NOT EXISTS mutual_funds (
     category VARCHAR(50) COMMENT 'Growth, Value, Blend, etc.',
     minimum_investment DECIMAL(19, 2) COMMENT 'Minimum investment amount',
     dividend_yield DECIMAL(5, 2) COMMENT 'Annual dividend yield %',
-    
+
     CONSTRAINT fk_mutual_funds_assets FOREIGN KEY (id) REFERENCES assets(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -81,7 +83,7 @@ CREATE TABLE IF NOT EXISTS cryptos (
     wallet_address VARCHAR(100) COMMENT 'Wallet address',
     staking_enabled BIT(1) COMMENT 'Is staking enabled',
     staking_apy DECIMAL(5, 2) COMMENT 'Annual staking yield %',
-    
+
     CONSTRAINT fk_cryptos_assets FOREIGN KEY (id) REFERENCES assets(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -93,7 +95,7 @@ CREATE TABLE IF NOT EXISTS real_estates (
     rental_income DECIMAL(19, 2) COMMENT 'Monthly rental income',
     square_footage INT COMMENT 'Property size in sq ft',
     year_built INT COMMENT 'Year property was built',
-    
+
     CONSTRAINT fk_real_estates_assets FOREIGN KEY (id) REFERENCES assets(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -104,7 +106,7 @@ CREATE TABLE IF NOT EXISTS cash_holdings (
     account_type VARCHAR(30) COMMENT 'SAVINGS, CHECKING, MONEY_MARKET, CD, HIGH_YIELD_SAVINGS',
     interest_rate DECIMAL(5, 2) COMMENT 'Annual interest rate %',
     bank_name VARCHAR(50) COMMENT 'Bank name',
-    
+
     CONSTRAINT fk_cash_holdings_assets FOREIGN KEY (id) REFERENCES assets(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -120,9 +122,9 @@ INSERT INTO assets (asset_type, symbol, name, quantity, buy_price, purchase_date
 ('STOCK', 'AMZN', 'Amazon.com Inc.', 20.0000, 175.00, '2024-01-05'),
 ('STOCK', 'TSLA', 'Tesla Inc.', 15.0000, 250.00, '2024-04-01');
 
-INSERT INTO stocks (id, exchange, sector, market_cap) 
+INSERT INTO stocks (id, exchange, sector, market_cap)
 SELECT id, 'NASDAQ', 'Technology', 'Large' FROM assets WHERE symbol IN ('AAPL', 'GOOGL', 'MSFT', 'AMZN');
-INSERT INTO stocks (id, exchange, sector, market_cap) 
+INSERT INTO stocks (id, exchange, sector, market_cap)
 SELECT id, 'NASDAQ', 'Automotive', 'Large' FROM assets WHERE symbol = 'TSLA';
 
 -- Insert ETFs

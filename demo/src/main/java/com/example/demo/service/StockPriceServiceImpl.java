@@ -1,5 +1,7 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.StockNews;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +13,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -127,6 +132,80 @@ public class StockPriceServiceImpl implements StockPriceService {
         return price != null && price.compareTo(BigDecimal.ZERO) > 0;
     }
 
+
+    // ------------------------------------------------------------------------
+    // NEW NEWS IMPLEMENTATION
+    // ------------------------------------------------------------------------
+
+    /**
+     * Get general market news.
+     * @param category general, forex, crypto, or merger. Defaults to "general".
+     */
+    @Override
+    public List<StockNews> getMarketNews(String category) {
+        String safeCategory = (category == null || category.isBlank()) ? "general" : category;
+
+        try {
+            // Build URL: /news?category={category}&token={apiKey}
+            String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/news")
+                    .queryParam("category", safeCategory)
+                    .queryParam("token", apiKey)
+                    .toUriString();
+
+            log.debug("Fetching market news for category: {}", safeCategory);
+
+            // Finnhub returns a JSON Array of objects
+            String response = restTemplate.getForObject(url, String.class);
+
+            if (response != null) {
+                // Deserialize JSON Array to List<StockNews>
+                return objectMapper.readValue(response, new TypeReference<List<StockNews>>(){});
+            }
+        } catch (Exception e) {
+            log.error("Failed to fetch market news: {}", e.getMessage());
+        }
+
+        return Collections.emptyList();
+    }
+
+    /**
+     * Get company specific news for a date range.
+     * Finnhub requires dates in YYYY-MM-DD format.
+     */
+    @Override
+    public List<StockNews> getCompanyNews(String symbol, LocalDate from, LocalDate to) {
+        if (symbol == null || symbol.isBlank()) return Collections.emptyList();
+
+        // Default to last 30 days if dates are missing
+        LocalDate toDate = (to != null) ? to : LocalDate.now();
+        LocalDate fromDate = (from != null) ? from : LocalDate.now().minusDays(30);
+
+        String upperSymbol = normalizeSymbol(symbol);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        try {
+            // Build URL: /company-news?symbol={symbol}&from={from}&to={to}&token={apiKey}
+            String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/company-news")
+                    .queryParam("symbol", upperSymbol)
+                    .queryParam("from", fromDate.format(formatter))
+                    .queryParam("to", toDate.format(formatter))
+                    .queryParam("token", apiKey)
+                    .toUriString();
+
+            log.debug("Fetching company news for {} from {} to {}", upperSymbol, fromDate, toDate);
+
+            String response = restTemplate.getForObject(url, String.class);
+
+            if (response != null) {
+                return objectMapper.readValue(response, new TypeReference<List<StockNews>>(){});
+            }
+        } catch (Exception e) {
+            log.error("Failed to fetch news for {}: {}", upperSymbol, e.getMessage());
+        }
+
+        return Collections.emptyList();
+    }
+
     /**
      * Normalize symbol for API calls.
      * Handles crypto symbols and other special cases.
@@ -158,4 +237,6 @@ public class StockPriceServiceImpl implements StockPriceService {
             return System.currentTimeMillis() - timestamp > CACHE_DURATION_MS;
         }
     }
+
+
 }

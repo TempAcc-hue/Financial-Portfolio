@@ -50,4 +50,6 @@ public class AssetDTO {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+
 }
