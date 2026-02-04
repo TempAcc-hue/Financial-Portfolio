@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -190,4 +191,16 @@ public class AssetController {
             return null;
         }
     }
+
+    @GetMapping("topGainersLoosers")
+    @Operation(summary = "Get top stock gainers and loosers", description = "his endpoint returns the top 20 gainers, losers, and the most active traded tickers in the US market.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Asset found"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Asset not found")
+    })
+    public ResponseEntity<ApiResponse<JSONObject>> getTopGainersLoosers() {
+        JSONObject asset = assetService.getTopGainersLoosers();
+        return ResponseEntity.ok(ApiResponse.success(asset));
+    }
+
 }

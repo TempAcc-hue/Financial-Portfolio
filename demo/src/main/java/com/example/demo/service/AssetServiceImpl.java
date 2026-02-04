@@ -6,6 +6,7 @@ import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -185,6 +186,13 @@ public class AssetServiceImpl implements AssetService {
         BaseAsset asset = findAssetById(id);
         deleteAssetEntity(asset);
         log.info("Deleted {} asset: {} (ID: {})", asset.getType(), asset.getName(), id);
+    }
+
+    @Override
+    public JSONObject getTopGainersLoosers() {
+
+        JSONObject json = new JSONObject();
+        return json;
     }
 
     /**

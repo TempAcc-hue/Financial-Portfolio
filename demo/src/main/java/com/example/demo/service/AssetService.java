@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dto.AssetDTO;
 import com.example.demo.entity.AssetType;
+import org.json.JSONObject;
 
 import java.util.List;
 
@@ -44,4 +45,6 @@ public interface AssetService {
      * Delete an asset by ID.
      */
     void deleteAsset(Long id);
+
+    JSONObject getTopGainersLoosers();
 }
