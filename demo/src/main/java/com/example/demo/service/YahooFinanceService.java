@@ -25,7 +25,7 @@ public class YahooFinanceService {
         try {
             // Calculate timestamps for last 1 year
             long period2 = Instant.now().getEpochSecond();
-            long period1 = Instant.now().minus(365, ChronoUnit.DAYS).getEpochSecond();
+            long period1 = Instant.now().minus(1826, ChronoUnit.DAYS).getEpochSecond();
 
             // Build URL
             String url = String.format(

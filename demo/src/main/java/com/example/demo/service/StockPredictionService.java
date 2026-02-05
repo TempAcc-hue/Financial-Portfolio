@@ -75,7 +75,7 @@ public class StockPredictionService {
 
             // 4. Scale the predicted price by 1.5
             if (mlResponse != null && mlResponse.getPredictedPrice() != null) {
-                mlResponse.setPredictedPrice(mlResponse.getPredictedPrice() * 1.5);
+                mlResponse.setPredictedPrice(mlResponse.getPredictedPrice() * 1.35);
             }
 
             return mlResponse;

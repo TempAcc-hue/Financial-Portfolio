@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Analysis Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/stock_styles.css">
+</head>
+<body>
+<div class="container">
+    <!-- Header Section -->
+    <header class="header">
+        <h1 class="serif">Stock Analysis Terminal</h1>
+        <p class="subtitle">Real-time market data with predictive analytics</p>
+    </header>
+
+    <!-- Search Section -->
+    <div class="search-card card">
+        <div class="search-container">
+            <div class="form-group">
+                <label class="form-label">Enter Ticker Symbol</label>
+                <input
+                        type="text"
+                        id="tickerInput"
+                        class="form-input"
+                        placeholder="AAPL, GOOGL, MSFT, TSLA..."
+                        autocomplete="off"
+                >
+            </div>
+            <button id="searchBtn" class="btn btn-primary">
+                <span id="searchBtnText">Analyze</span>
+                <span id="searchBtnLoader" class="loader hidden"></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Results Container -->
+    <div id="resultsContainer" class="hidden">
+        <!-- Stock Header -->
+        <div class="stock-header-card card">
+            <div class="stock-header-content">
+                <div class="stock-title-section">
+                    <h2 id="stockTicker" class="stock-ticker"></h2>
+                    <span id="stockBadge" class="badge badge-stock">Equity</span>
+                </div>
+                <div class="stock-price-section">
+                    <div class="current-price" id="currentPrice">$0.00</div>
+                    <div class="price-change" id="priceChange">+0.00%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid Layout for Cards -->
+        <div class="dashboard-grid">
+            <!-- ML Prediction Card -->
+            <div class="prediction-card card grid-span-6">
+                <div class="card-header">
+                    <h3 class="card-title">ML Price Prediction</h3>
+                    <span class="text-secondary text-xs">Neural Network Model</span>
+                </div>
+                <div class="prediction-content">
+                    <div class="prediction-value-box">
+                        <span class="label text-secondary text-xs uppercase tracking-wider">Predicted Price</span>
+                        <span class="stat-value" id="predictedPrice">$0.00</span>
+                    </div>
+                    <div class="prediction-indicator-box">
+                        <span class="label text-secondary text-xs uppercase tracking-wider">Market Sentiment</span>
+                        <div class="indicator" id="predictionIndicator">
+                            <span class="dot"></span>
+                            <span id="sentimentText" class="sentiment-text">Analyzing...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Card -->
+            <div class="stats-card card grid-span-6">
+                <div class="card-header">
+                    <h3 class="card-title">Market Statistics</h3>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">24h Volume</span>
+                        <span class="stat-value-sm" id="volume24h">—</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">24h High</span>
+                        <span class="stat-value-sm text-success" id="high24h">—</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">24h Low</span>
+                        <span class="stat-value-sm text-danger" id="low24h">—</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Volatility</span>
+                        <span class="stat-value-sm" id="volatility">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="chart-card card grid-span-12">
+                <div class="card-header">
+                    <h3 class="card-title">Price Chart</h3>
+                    <span class="text-secondary text-xs" id="chartPeriod">Historical Data</span>
+                </div>
+                <div id="chart"></div>
+            </div>
+
+            <!-- News Section -->
+            <div class="news-section card grid-span-12">
+                <div class="card-header">
+                    <h3 class="card-title">Market Intelligence</h3>
+                    <span class="text-secondary text-xs">Latest News & Analysis</span>
+                </div>
+                <div id="newsContainer" class="news-container">
+                    <!-- News articles will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    <div id="errorContainer" class="error-container card hidden">
+        <div class="error-content">
+            <div class="error-icon">⚠</div>
+            <p id="errorMessage" class="error-text"></p>
+            <button class="btn btn-primary" onclick="document.getElementById('errorContainer').classList.add('hidden')">
+                Dismiss
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingContainer" class="loading-container card hidden">
+        <div class="loading-spinner"></div>
+        <p class="text-secondary">Analyzing market data...</p>
+    </div>
+</div>
+
+<script type="module" src="scripts/stock_script.js"></script>
+</body>
+</html>
