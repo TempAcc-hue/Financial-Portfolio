@@ -22,7 +22,7 @@ public class StockPredictionService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
     // URL of your running Python Service
-    private final String ML_SERVICE_URL = "http://localhost:8000/predict";
+    private final String ML_SERVICE_URL = "http://localhost:5001/predict";
 
     // IMPORTANT: Must match the sequence length your model was trained on!
     private final int SEQUENCE_LENGTH = 60;
@@ -37,8 +37,7 @@ public class StockPredictionService {
             // Build URL
             String url = String.format(
                     "https://query1.finance.yahoo.com/v8/finance/chart/%s?period1=%d&period2=%d&interval=1d",
-                    ticker, period1, period2
-            );
+                    ticker, period1, period2);
 
             // Set headers to avoid rate limiting
             HttpHeaders headers = new HttpHeaders();
@@ -52,8 +51,7 @@ public class StockPredictionService {
                     url,
                     HttpMethod.GET,
                     entity,
-                    String.class
-            );
+                    String.class);
 
             if (response.getBody() == null) {
                 throw new RuntimeException("Empty response from Yahoo Finance");
@@ -63,15 +61,18 @@ public class StockPredictionService {
             List<List<Double>> formattedData = parseYahooResponseForML(response.getBody());
 
             if (formattedData.size() < SEQUENCE_LENGTH) {
-                throw new RuntimeException("Not enough historical data to make a prediction. Got " + formattedData.size() + " days, need " + SEQUENCE_LENGTH);
+                throw new RuntimeException("Not enough historical data to make a prediction. Got "
+                        + formattedData.size() + " days, need " + SEQUENCE_LENGTH);
             }
 
             // Get the LAST 'SEQUENCE_LENGTH' candles (e.g., the most recent 60 days)
-            List<List<Double>> recentData = formattedData.subList(formattedData.size() - SEQUENCE_LENGTH, formattedData.size());
+            List<List<Double>> recentData = formattedData.subList(formattedData.size() - SEQUENCE_LENGTH,
+                    formattedData.size());
 
             // 3. Call Python Microservice
             MLPredictionRequest request = new MLPredictionRequest(recentData);
-            MLPredictionResponse mlResponse = restTemplate.postForObject(ML_SERVICE_URL, request, MLPredictionResponse.class);
+            MLPredictionResponse mlResponse = restTemplate.postForObject(ML_SERVICE_URL, request,
+                    MLPredictionResponse.class);
 
             // 4. Scale the predicted price by 1.5
             if (mlResponse != null && mlResponse.getPredictedPrice() != null) {
