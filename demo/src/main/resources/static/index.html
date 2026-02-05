@@ -196,17 +196,6 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="asset-symbol">Symbol *</label>
-                        <input type="text" id="asset-symbol" required placeholder="e.g., AAPL" maxlength="20">
-                    </div>
-                    <div class="form-group">
-                        <label for="asset-name">Name *</label>
-                        <input type="text" id="asset-name" required placeholder="e.g., Apple Inc." maxlength="100">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
                         <label for="asset-type">Type *</label>
                         <select id="asset-type" required>
                             <option value="">Select type...</option>
@@ -220,19 +209,100 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="asset-quantity">Quantity *</label>
-                        <input type="number" id="asset-quantity" required step="0.0001" min="0.0001" placeholder="0.00">
+                        <label for="asset-purchase-date">Purchase Date *</label>
+                        <input type="date" id="asset-purchase-date" required>
+                    </div>
+                </div>
+
+                <!-- Common fields for all asset types -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="asset-symbol"><span id="symbol-label">Symbol</span> *</label>
+                        <input type="text" id="asset-symbol" required placeholder="e.g., AAPL" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="asset-name">Name *</label>
+                        <input type="text" id="asset-name" required placeholder="e.g., Apple Inc." maxlength="100">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="asset-buy-price">Buy Price *</label>
-                        <input type="number" id="asset-buy-price" required step="0.01" min="0.01" placeholder="0.00">
+                        <label for="asset-quantity"><span id="quantity-label">Quantity</span> *</label>
+                        <input type="number" id="asset-quantity" required step="0.0001" min="0.0001" placeholder="0.00">
                     </div>
                     <div class="form-group">
-                        <label for="asset-purchase-date">Purchase Date</label>
-                        <input type="date" id="asset-purchase-date">
+                        <label for="asset-buy-price"><span id="price-label">Buy Price</span> *</label>
+                        <input type="number" id="asset-buy-price" required step="0.01" min="0.01" placeholder="0.00">
+                    </div>
+                </div>
+
+                <!-- Bond-specific fields -->
+                <div id="bond-fields" class="type-specific-fields hidden">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="bond-coupon-rate">Coupon Rate (%)</label>
+                            <input type="number" id="bond-coupon-rate" step="0.01" min="0" placeholder="e.g., 5.5">
+                        </div>
+                        <div class="form-group">
+                            <label for="bond-maturity-date">Maturity Date</label>
+                            <input type="date" id="bond-maturity-date">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real Estate-specific fields -->
+                <div id="real-estate-fields" class="type-specific-fields hidden">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="property-type">Property Type</label>
+                            <select id="property-type">
+                                <option value="">Select...</option>
+                                <option value="residential">Residential</option>
+                                <option value="commercial">Commercial</option>
+                                <option value="land">Land</option>
+                                <option value="reit">REIT</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="property-location">Location</label>
+                            <input type="text" id="property-location" placeholder="City, State" maxlength="100">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Crypto-specific fields -->
+                <div id="crypto-fields" class="type-specific-fields hidden">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="crypto-wallet">Wallet/Exchange</label>
+                            <input type="text" id="crypto-wallet" placeholder="e.g., Coinbase, Ledger" maxlength="50">
+                        </div>
+                        <div class="form-group">
+                            <label for="crypto-network">Network</label>
+                            <input type="text" id="crypto-network" placeholder="e.g., Ethereum, BSC" maxlength="50">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mutual Fund-specific fields -->
+                <div id="mutual-fund-fields" class="type-specific-fields hidden">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fund-category">Fund Category</label>
+                            <select id="fund-category">
+                                <option value="">Select...</option>
+                                <option value="equity">Equity</option>
+                                <option value="debt">Debt</option>
+                                <option value="hybrid">Hybrid</option>
+                                <option value="index">Index</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="fund-expense-ratio">Expense Ratio (%)</label>
+                            <input type="number" id="fund-expense-ratio" step="0.01" min="0" max="5"
+                                placeholder="e.g., 0.5">
+                        </div>
                     </div>
                 </div>
 
