@@ -503,7 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================
 
     // Load market news on page load
-    loadMarketNews('forex');
+    loadMarketNews('crypto');
 
     // News tabs
     elements.newsTabs.forEach(tab => {
