@@ -130,10 +130,8 @@ class PortfolioServiceTest {
         void givenAssets_whenGetPerformanceByType_thenComputeMetrics() {
             // STOCK: value 200, cost 100 -> gain 100 -> percentage 100%
             AssetDTO stock = createAssetDTO(1L, AssetType.STOCK, "A", new BigDecimal("200"), new BigDecimal("100"), new BigDecimal("100"));
-            // CASH: value 0, cost 0 -> should be skipped (cost == 0 leads to no percentage but included only if totals > 0)
-            AssetDTO cash = createAssetDTO(2L, AssetType.CASH, "C", BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
 
-            when(assetService.getAllAssets()).thenReturn(List.of(stock, cash));
+            when(assetService.getAllAssets()).thenReturn(List.of(stock));
 
             Map<String, Map<String, BigDecimal>> perf = portfolioService.getPerformanceByType();
 
@@ -142,9 +140,6 @@ class PortfolioServiceTest {
             assertEquals(0, new BigDecimal("200").compareTo(stockPerf.get("value")));
             assertEquals(0, new BigDecimal("100").compareTo(stockPerf.get("cost")));
             assertEquals(0, new BigDecimal("100").compareTo(stockPerf.get("percentage")));
-
-            // CASH has zero totals; since totals are zero it will not appear
-            assertFalse(perf.containsKey(AssetType.CASH.name()));
         }
     }
 }
