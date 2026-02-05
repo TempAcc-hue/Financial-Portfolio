@@ -29,41 +29,60 @@ const gradientColors = [
 ];
 
 // ===================================
+// Theme-Aware Colors
+// ===================================
+function getThemeColors() {
+    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+    return {
+        text: isDark ? '#f1f5f9' : '#1e293b',
+        textMuted: isDark ? '#94a3b8' : '#64748b',
+        background: isDark ? '#1e293b' : '#ffffff',
+        border: isDark ? '#334155' : '#e2e8f0',
+        mode: isDark ? 'dark' : 'light'
+    };
+}
+
+// ===================================
 // Chart Configuration
 // ===================================
-const baseChartOptions = {
-    chart: {
-        background: 'transparent',
-        foreColor: '#94a3b8',
-        fontFamily: 'Inter, sans-serif',
-        toolbar: {
-            show: false
+function getBaseChartOptions() {
+    const colors = getThemeColors();
+    return {
+        chart: {
+            background: 'transparent',
+            foreColor: colors.textMuted,
+            fontFamily: 'Inter, sans-serif',
+            toolbar: {
+                show: false
+            },
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 800
+            }
         },
-        animations: {
-            enabled: true,
-            easing: 'easeinout',
-            speed: 800
+        theme: {
+            mode: colors.mode
+        },
+        tooltip: {
+            theme: colors.mode,
+            style: {
+                fontSize: '12px'
+            }
         }
-    },
-    theme: {
-        mode: 'dark'
-    },
-    tooltip: {
-        theme: 'dark',
-        style: {
-            fontSize: '12px'
-        }
-    }
-};
+    };
+}
 
 // ===================================
 // Allocation Pie Chart
 // ===================================
 function createAllocationChart(allocation) {
     const container = document.getElementById('allocation-chart');
+    const themeColors = getThemeColors();
+    const baseChartOptions = getBaseChartOptions();
 
     if (!allocation || Object.keys(allocation).length === 0) {
-        container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">No allocation data available</div>';
+        container.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: ${themeColors.textMuted};">No allocation data available</div>`;
         return;
     }
 
@@ -90,13 +109,13 @@ function createAllocationChart(allocation) {
                         name: {
                             show: true,
                             fontSize: '14px',
-                            color: '#f1f5f9'
+                            color: themeColors.text
                         },
                         value: {
                             show: true,
                             fontSize: '20px',
                             fontWeight: 600,
-                            color: '#f1f5f9',
+                            color: themeColors.text,
                             formatter: function (val) {
                                 return parseFloat(val).toFixed(1) + '%';
                             }
@@ -104,7 +123,7 @@ function createAllocationChart(allocation) {
                         total: {
                             show: true,
                             label: 'Total',
-                            color: '#94a3b8',
+                            color: themeColors.textMuted,
                             formatter: function () {
                                 return '100%';
                             }
@@ -118,7 +137,7 @@ function createAllocationChart(allocation) {
             position: 'bottom',
             horizontalAlign: 'center',
             labels: {
-                colors: '#f1f5f9'
+                colors: themeColors.text
             },
             markers: {
                 width: 12,
@@ -132,7 +151,7 @@ function createAllocationChart(allocation) {
         stroke: {
             show: true,
             width: 2,
-            colors: ['#1e293b']
+            colors: [themeColors.background]
         },
         responsive: [{
             breakpoint: 480,
@@ -161,9 +180,11 @@ function createAllocationChart(allocation) {
 // ===================================
 function createPerformanceChart(assets) {
     const container = document.getElementById('performance-chart');
+    const themeColors = getThemeColors();
+    const baseChartOptions = getBaseChartOptions();
 
     if (!assets || assets.length === 0) {
-        container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">No performance data available</div>';
+        container.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: ${themeColors.textMuted};">No performance data available</div>`;
         return;
     }
 
@@ -223,7 +244,7 @@ function createPerformanceChart(assets) {
             categories: types.map(formatAssetTypeLabel),
             labels: {
                 style: {
-                    colors: '#94a3b8',
+                    colors: themeColors.textMuted,
                     fontSize: '11px'
                 }
             },
@@ -237,7 +258,7 @@ function createPerformanceChart(assets) {
         yaxis: {
             labels: {
                 style: {
-                    colors: '#94a3b8'
+                    colors: themeColors.textMuted
                 },
                 formatter: function (val) {
                     return formatCompactCurrency(val);
@@ -245,7 +266,7 @@ function createPerformanceChart(assets) {
             }
         },
         grid: {
-            borderColor: '#334155',
+            borderColor: themeColors.border,
             strokeDashArray: 4,
             xaxis: {
                 lines: {
@@ -258,7 +279,7 @@ function createPerformanceChart(assets) {
             position: 'top',
             horizontalAlign: 'right',
             labels: {
-                colors: '#f1f5f9'
+                colors: themeColors.text
             }
         },
         tooltip: {
