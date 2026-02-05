@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.AssetDTO;
 import com.example.demo.entity.AssetType;
+import com.example.demo.exception.GlobalExceptionHandler;
 import com.example.demo.service.AssetService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,6 +28,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AssetController.class)
+@Import(GlobalExceptionHandler.class)
 class AssetControllerTest {
 
     @Autowired
@@ -186,16 +189,16 @@ class AssetControllerTest {
         @Test
         @DisplayName("Given invalid asset data when createAsset then return Bad Request")
         void givenInvalidAssetData_whenCreateAsset_thenReturnBadRequest() throws Exception {
-            // GIVEN
-            AssetDTO invalidDto = new AssetDTO(); // Empty DTO assuming @NotNull validations exist
+            // GIVEN - Empty DTO with all null fields violates @NotNull and @NotBlank constraints
+            AssetDTO invalidDto = new AssetDTO();
 
-            // WHEN & THEN
+            // WHEN & THEN - Validation should fail with 400 Bad Request
             mockMvc.perform(post("/api/assets")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(invalidDto)))
-                    // This assumes @Valid triggers 400. If no annotations exist on DTO fields, this might fail to 200/201.
-                    // Adjust based on strict DTO validation rules.
-                    .andExpect(status().isBadRequest());
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.message").value("Validation failed"));
         }
     }
 
