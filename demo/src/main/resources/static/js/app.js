@@ -423,6 +423,30 @@ async function deleteAsset(id) {
 }
 
 // ===================================
+// Theme Functions
+// ===================================
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+}
+
+function updateThemeIcon(theme) {
+    const themeIcon = document.querySelector('.theme-icon');
+    if (themeIcon) {
+        themeIcon.textContent = theme === 'dark' ? '🌙' : '☀️';
+    }
+}
+
+// ===================================
 // Global Functions (for onclick handlers)
 // ===================================
 window.editAsset = function (id) {
@@ -440,8 +464,17 @@ window.confirmDelete = function (id, name) {
 // Event Listeners
 // ===================================
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize theme from localStorage
+    initTheme();
+
     // Load initial data
     loadPortfolioData();
+
+    // Theme toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
 
     // Add Asset button
     elements.addAssetBtn.addEventListener('click', openAddModal);
