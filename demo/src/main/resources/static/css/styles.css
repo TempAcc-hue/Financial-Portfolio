@@ -394,6 +394,38 @@ body {
     border-bottom: 1px solid var(--color-border);
 }
 
+.assets-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.assets-table th.sortable:hover {
+    background: var(--color-border);
+    color: var(--color-text);
+}
+
+.sort-indicator {
+    display: inline-block;
+    margin-left: var(--space-xs);
+    opacity: 0.5;
+    font-size: 0.65rem;
+}
+
+.sort-indicator::after {
+    content: '⇅';
+}
+
+.assets-table th.sortable.asc .sort-indicator::after {
+    content: '↑';
+    opacity: 1;
+}
+
+.assets-table th.sortable.desc .sort-indicator::after {
+    content: '↓';
+    opacity: 1;
+}
+
 .assets-table td {
     border-bottom: 1px solid var(--glass-border);
 }

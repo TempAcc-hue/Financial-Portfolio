@@ -66,6 +66,8 @@ const elements = {
 // State
 let currentDeleteId = null;
 let allAssets = [];
+let currentSortColumn = null;
+let currentSortDirection = 'asc';
 
 // ===================================
 // API Service
@@ -258,6 +260,58 @@ function formatAssetType(type) {
 }
 
 // ===================================
+// Sorting Functions
+// ===================================
+function sortAssets(column) {
+    // Toggle direction if same column, else start ascending
+    if (currentSortColumn === column) {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSortColumn = column;
+        currentSortDirection = 'asc';
+    }
+
+    // Update header indicators
+    document.querySelectorAll('.assets-table th.sortable').forEach(th => {
+        th.classList.remove('asc', 'desc');
+        if (th.dataset.sort === column) {
+            th.classList.add(currentSortDirection);
+        }
+    });
+
+    // Sort the assets
+    const sortedAssets = [...allAssets].sort((a, b) => {
+        let aVal = a[column];
+        let bVal = b[column];
+
+        // Handle null/undefined
+        if (aVal == null) aVal = '';
+        if (bVal == null) bVal = '';
+
+        // String comparison for text fields
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+            const comparison = aVal.localeCompare(bVal);
+            return currentSortDirection === 'asc' ? comparison : -comparison;
+        }
+
+        // Numeric comparison
+        const numA = parseFloat(aVal) || 0;
+        const numB = parseFloat(bVal) || 0;
+
+        // For gainLoss, always prefer gains (higher is better)
+        // asc = best performers first (highest gain)
+        // desc = worst performers first (biggest loss)
+        if (column === 'gainLoss' || column === 'gainLossPercentage') {
+            return currentSortDirection === 'asc' ? numB - numA : numA - numB;
+        }
+
+        return currentSortDirection === 'asc' ? numA - numB : numB - numA;
+    });
+
+    renderAssetsTable(sortedAssets);
+}
+
+// ===================================
 // Modal Functions
 // ===================================
 function openAddModal() {
@@ -439,6 +493,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             renderAssetsTable(allAssets);
         }
+    });
+
+    // Sortable table headers
+    document.querySelectorAll('.assets-table th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            sortAssets(th.dataset.sort);
+        });
     });
 
     // CSV upload controls
