@@ -429,11 +429,19 @@ body {
 
 .table-wrapper {
     overflow-x: auto;
+    overflow-y: auto;
+    max-height: 500px;
 }
 
 .assets-table {
     width: 100%;
     border-collapse: collapse;
+}
+
+.assets-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .assets-table th,
