@@ -66,6 +66,8 @@ const elements = {
 // State
 let currentDeleteId = null;
 let allAssets = [];
+let currentSortColumn = null;
+let currentSortDirection = 'asc';
 
 // ===================================
 // API Service
@@ -258,12 +260,66 @@ function formatAssetType(type) {
 }
 
 // ===================================
+// Sorting Functions
+// ===================================
+function sortAssets(column) {
+    // Toggle direction if same column, else start ascending
+    if (currentSortColumn === column) {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSortColumn = column;
+        currentSortDirection = 'asc';
+    }
+
+    // Update header indicators
+    document.querySelectorAll('.assets-table th.sortable').forEach(th => {
+        th.classList.remove('asc', 'desc');
+        if (th.dataset.sort === column) {
+            th.classList.add(currentSortDirection);
+        }
+    });
+
+    // Sort the assets
+    const sortedAssets = [...allAssets].sort((a, b) => {
+        let aVal = a[column];
+        let bVal = b[column];
+
+        // Handle null/undefined
+        if (aVal == null) aVal = '';
+        if (bVal == null) bVal = '';
+
+        // String comparison for text fields
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+            const comparison = aVal.localeCompare(bVal);
+            return currentSortDirection === 'asc' ? comparison : -comparison;
+        }
+
+        // Numeric comparison
+        const numA = parseFloat(aVal) || 0;
+        const numB = parseFloat(bVal) || 0;
+
+        // For gainLoss, always prefer gains (higher is better)
+        // asc = best performers first (highest gain)
+        // desc = worst performers first (biggest loss)
+        if (column === 'gainLoss' || column === 'gainLossPercentage') {
+            return currentSortDirection === 'asc' ? numB - numA : numA - numB;
+        }
+
+        return currentSortDirection === 'asc' ? numA - numB : numB - numA;
+    });
+
+    renderAssetsTable(sortedAssets);
+}
+
+// ===================================
 // Modal Functions
 // ===================================
 function openAddModal() {
     elements.modalTitle.textContent = 'Add New Asset';
     elements.assetForm.reset();
     elements.assetId.value = '';
+    hideAllTypeFields();
+    updateFieldLabels('');
     elements.assetModal.classList.remove('hidden');
 }
 
@@ -276,12 +332,111 @@ function openEditModal(asset) {
     elements.assetQuantity.value = asset.quantity;
     elements.assetBuyPrice.value = asset.buyPrice;
     elements.assetPurchaseDate.value = asset.purchaseDate || '';
+    updateFieldLabels(asset.type);
+    showTypeSpecificFields(asset.type);
     elements.assetModal.classList.remove('hidden');
 }
 
 function closeModal() {
     elements.assetModal.classList.add('hidden');
     elements.assetForm.reset();
+    hideAllTypeFields();
+}
+
+// ===================================
+// Asset Type-Specific Field Handlers
+// ===================================
+function hideAllTypeFields() {
+    document.querySelectorAll('.type-specific-fields').forEach(el => {
+        el.classList.add('hidden');
+    });
+}
+
+function showTypeSpecificFields(assetType) {
+    hideAllTypeFields();
+
+    const fieldMappings = {
+        'BOND': 'bond-fields',
+        'REAL_ESTATE': 'real-estate-fields',
+        'CRYPTO': 'crypto-fields',
+        'MUTUAL_FUND': 'mutual-fund-fields'
+    };
+
+    const fieldId = fieldMappings[assetType];
+    if (fieldId) {
+        const fields = document.getElementById(fieldId);
+        if (fields) {
+            fields.classList.remove('hidden');
+        }
+    }
+}
+
+function updateFieldLabels(assetType) {
+    const symbolLabel = document.getElementById('symbol-label');
+    const quantityLabel = document.getElementById('quantity-label');
+    const priceLabel = document.getElementById('price-label');
+    const symbolInput = document.getElementById('asset-symbol');
+    const nameInput = document.getElementById('asset-name');
+
+    // Reset to defaults
+    if (symbolLabel) symbolLabel.textContent = 'Symbol';
+    if (quantityLabel) quantityLabel.textContent = 'Quantity';
+    if (priceLabel) priceLabel.textContent = 'Buy Price';
+    if (symbolInput) symbolInput.placeholder = 'e.g., AAPL';
+    if (nameInput) nameInput.placeholder = 'e.g., Apple Inc.';
+
+    // Update based on asset type
+    switch (assetType) {
+        case 'STOCK':
+            if (symbolInput) symbolInput.placeholder = 'e.g., AAPL, GOOGL';
+            if (nameInput) nameInput.placeholder = 'e.g., Apple Inc.';
+            break;
+        case 'BOND':
+            if (symbolLabel) symbolLabel.textContent = 'Bond ID';
+            if (symbolInput) symbolInput.placeholder = 'e.g., US10Y, CORP-001';
+            if (nameInput) nameInput.placeholder = 'e.g., Treasury Bond 10Y';
+            if (quantityLabel) quantityLabel.textContent = 'Face Value Units';
+            if (priceLabel) priceLabel.textContent = 'Purchase Price';
+            break;
+        case 'ETF':
+            if (symbolInput) symbolInput.placeholder = 'e.g., SPY, QQQ';
+            if (nameInput) nameInput.placeholder = 'e.g., S&P 500 ETF';
+            if (quantityLabel) quantityLabel.textContent = 'Shares';
+            break;
+        case 'MUTUAL_FUND':
+            if (symbolLabel) symbolLabel.textContent = 'Fund Code';
+            if (symbolInput) symbolInput.placeholder = 'e.g., VFINX, FXAIX';
+            if (nameInput) nameInput.placeholder = 'e.g., Vanguard 500 Index';
+            if (quantityLabel) quantityLabel.textContent = 'Units';
+            if (priceLabel) priceLabel.textContent = 'NAV at Purchase';
+            break;
+        case 'CRYPTO':
+            if (symbolLabel) symbolLabel.textContent = 'Ticker';
+            if (symbolInput) symbolInput.placeholder = 'e.g., BTC, ETH';
+            if (nameInput) nameInput.placeholder = 'e.g., Bitcoin';
+            if (quantityLabel) quantityLabel.textContent = 'Coins/Tokens';
+            break;
+        case 'REAL_ESTATE':
+            if (symbolLabel) symbolLabel.textContent = 'Property ID';
+            if (symbolInput) symbolInput.placeholder = 'e.g., PROP-001';
+            if (nameInput) nameInput.placeholder = 'e.g., Downtown Apartment';
+            if (quantityLabel) quantityLabel.textContent = 'Ownership %';
+            if (priceLabel) priceLabel.textContent = 'Purchase Price';
+            break;
+        case 'CASH':
+            if (symbolLabel) symbolLabel.textContent = 'Account ID';
+            if (symbolInput) symbolInput.placeholder = 'e.g., SAVINGS-001';
+            if (nameInput) nameInput.placeholder = 'e.g., Emergency Fund';
+            if (quantityLabel) quantityLabel.textContent = 'Amount';
+            if (priceLabel) priceLabel.textContent = 'Value per Unit';
+            break;
+    }
+}
+
+function handleAssetTypeChange() {
+    const selectedType = elements.assetType.value;
+    updateFieldLabels(selectedType);
+    showTypeSpecificFields(selectedType);
 }
 
 function openDeleteModal(id, name) {
@@ -369,6 +524,32 @@ async function deleteAsset(id) {
 }
 
 // ===================================
+// Theme Functions
+// ===================================
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+    // Refresh charts to apply new theme colors
+    loadPortfolioData();
+}
+
+function updateThemeIcon(theme) {
+    const themeIcon = document.querySelector('.theme-icon');
+    if (themeIcon) {
+        themeIcon.textContent = theme === 'dark' ? '🌙' : '☀️';
+    }
+}
+
+// ===================================
 // Global Functions (for onclick handlers)
 // ===================================
 window.editAsset = function (id) {
@@ -386,11 +567,23 @@ window.confirmDelete = function (id, name) {
 // Event Listeners
 // ===================================
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize theme from localStorage
+    initTheme();
+
     // Load initial data
     loadPortfolioData();
 
+    // Theme toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+
     // Add Asset button
     elements.addAssetBtn.addEventListener('click', openAddModal);
+
+    // Asset type change handler for dynamic fields
+    elements.assetType.addEventListener('change', handleAssetTypeChange);
 
     // Modal close buttons
     elements.modalCloseBtn.addEventListener('click', closeModal);
@@ -439,6 +632,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             renderAssetsTable(allAssets);
         }
+    });
+
+    // Sortable table headers
+    document.querySelectorAll('.assets-table th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            sortAssets(th.dataset.sort);
+        });
     });
 
     // CSV upload controls
@@ -503,7 +703,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================
 
     // Load market news on page load
-    loadMarketNews('forex');
+    loadMarketNews('crypto');
 
     // News tabs
     elements.newsTabs.forEach(tab => {

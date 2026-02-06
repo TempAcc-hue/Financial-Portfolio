@@ -1,146 +1,307 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Analysis Terminal</title>
+    <title>Stock Analysis | Portfolio Manager</title>
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles/stock_styles.css">
-</head>
-<body>
-<div class="container">
-    <!-- Header Section -->
-    <header class="header">
-        <h1 class="serif">Stock Analysis Terminal</h1>
-        <p class="subtitle">Real-time market data with predictive analytics</p>
-    </header>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Search Section -->
-    <div class="search-card card">
-        <div class="search-container">
-            <div class="form-group">
-                <label class="form-label">Enter Ticker Symbol</label>
-                <input
-                        type="text"
-                        id="tickerInput"
-                        class="form-input"
-                        placeholder="AAPL, GOOGL, MSFT, TSLA..."
-                        autocomplete="off"
-                >
-            </div>
-            <button id="searchBtn" class="btn btn-primary">
-                <span id="searchBtnText">Analyze</span>
-                <span id="searchBtnLoader" class="loader hidden"></span>
+    <!-- Main Dashboard Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Stock-specific styles (overrides) -->
+    <link rel="stylesheet" href="styles/stock_styles.css">
+    <style>
+        /* Override stock styles to match main dashboard */
+        :root {
+            --primary-dark: #0f172a;
+            --secondary-dark: #1e293b;
+            --accent-gold: #6366f1;
+            --accent-blue: #818cf8;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #475569;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #0c1222 50%, var(--secondary-dark) 100%);
+            padding: 0;
+            padding-top: 80px;
+        }
+
+        .container {
+            padding: 2rem;
+        }
+
+        /* Keep accent color consistent with dashboard */
+        .header h1 {
+            background: linear-gradient(135deg, #6366f1 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+        }
+
+        .header::after {
+            background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+        }
+
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+        }
+
+        .card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .card::before {
+            background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+        }
+
+        .btn-primary {
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+            background: transparent;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent-gold);
+            color: white;
+        }
+
+        .form-input {
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent-gold);
+        }
+
+        .current-price,
+        .stat-value {
+            background: linear-gradient(135deg, #6366f1 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .source-name {
+            color: var(--accent-gold);
+        }
+
+        .loading-spinner {
+            border-top-color: var(--accent-gold);
+        }
+
+        .loader {
+            border-top-color: var(--accent-gold);
+        }
+
+        /* Light theme support */
+        [data-theme="light"] body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f8fafc 100%);
+        }
+
+        [data-theme="light"] .card {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        [data-theme="light"] .form-input {
+            background: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation (Same as main dashboard) -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="brand-icon">📊</span>
+            <span class="brand-text">Portfolio Manager</span>
+        </div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Dashboard</a>
+            <a href="stock.html" class="nav-link active">Stock Analysis</a>
+            <a href="/swagger-ui.html" class="nav-link" target="_blank">API Docs</a>
+            <button id="theme-toggle" class="theme-toggle" title="Toggle theme">
+                <span class="theme-icon">🌙</span>
             </button>
         </div>
-    </div>
+    </nav>
 
-    <!-- Results Container -->
-    <div id="resultsContainer" class="hidden">
-        <!-- Stock Header -->
-        <div class="stock-header-card card">
-            <div class="stock-header-content">
-                <div class="stock-title-section">
-                    <h2 id="stockTicker" class="stock-ticker"></h2>
-                    <span id="stockBadge" class="badge badge-stock">Equity</span>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <h1>Stock Analysis Terminal</h1>
+            <p class="subtitle">Real-time market data with ML-powered predictive analytics</p>
+        </header>
+
+        <!-- Search Section -->
+        <div class="search-card card">
+            <div class="search-container">
+                <div class="form-group">
+                    <label class="form-label">Enter Ticker Symbol</label>
+                    <input type="text" id="tickerInput" class="form-input" placeholder="AAPL, GOOGL, MSFT, TSLA..."
+                        autocomplete="off">
                 </div>
-                <div class="stock-price-section">
-                    <div class="current-price" id="currentPrice">$0.00</div>
-                    <div class="price-change" id="priceChange">+0.00%</div>
-                </div>
+                <button id="searchBtn" class="btn btn-primary">
+                    <span id="searchBtnText">Analyze</span>
+                    <span id="searchBtnLoader" class="loader hidden"></span>
+                </button>
             </div>
         </div>
 
-        <!-- Grid Layout for Cards -->
-        <div class="dashboard-grid">
-            <!-- ML Prediction Card -->
-            <div class="prediction-card card grid-span-6">
-                <div class="card-header">
-                    <h3 class="card-title">ML Price Prediction</h3>
-                    <span class="text-secondary text-xs">Neural Network Model</span>
-                </div>
-                <div class="prediction-content">
-                    <div class="prediction-value-box">
-                        <span class="label text-secondary text-xs uppercase tracking-wider">Predicted Price</span>
-                        <span class="stat-value" id="predictedPrice">$0.00</span>
+        <!-- Results Container -->
+        <div id="resultsContainer" class="hidden">
+            <!-- Stock Header -->
+            <div class="stock-header-card card">
+                <div class="stock-header-content">
+                    <div class="stock-title-section">
+                        <h2 id="stockTicker" class="stock-ticker"></h2>
+                        <span id="stockBadge" class="badge badge-stock">Equity</span>
                     </div>
-                    <div class="prediction-indicator-box">
-                        <span class="label text-secondary text-xs uppercase tracking-wider">Market Sentiment</span>
-                        <div class="indicator" id="predictionIndicator">
-                            <span class="dot"></span>
-                            <span id="sentimentText" class="sentiment-text">Analyzing...</span>
+                    <div class="stock-price-section">
+                        <div class="current-price" id="currentPrice">$0.00</div>
+                        <div class="price-change" id="priceChange">+0.00%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid Layout for Cards -->
+            <div class="dashboard-grid">
+                <!-- ML Prediction Card -->
+                <div class="prediction-card card grid-span-6">
+                    <div class="card-header">
+                        <h3 class="card-title">ML Price Prediction</h3>
+                        <span class="text-secondary text-xs">Neural Network Model</span>
+                    </div>
+                    <div class="prediction-content">
+                        <div class="prediction-value-box">
+                            <span class="label text-secondary text-xs uppercase tracking-wider">Predicted Price</span>
+                            <span class="stat-value" id="predictedPrice">$0.00</span>
+                        </div>
+                        <div class="prediction-indicator-box">
+                            <span class="label text-secondary text-xs uppercase tracking-wider">Market Sentiment</span>
+                            <div class="indicator" id="predictionIndicator">
+                                <span class="dot"></span>
+                                <span id="sentimentText" class="sentiment-text">Analyzing...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Statistics Card -->
-            <div class="stats-card card grid-span-6">
-                <div class="card-header">
-                    <h3 class="card-title">Market Statistics</h3>
+                <!-- Statistics Card -->
+                <div class="stats-card card grid-span-6">
+                    <div class="card-header">
+                        <h3 class="card-title">Market Statistics</h3>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">24h Volume</span>
+                            <span class="stat-value-sm" id="volume24h">—</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">24h High</span>
+                            <span class="stat-value-sm text-success" id="high24h">—</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">24h Low</span>
+                            <span class="stat-value-sm text-danger" id="low24h">—</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Volatility</span>
+                            <span class="stat-value-sm" id="volatility">—</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <span class="stat-label">24h Volume</span>
-                        <span class="stat-value-sm" id="volume24h">—</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">24h High</span>
-                        <span class="stat-value-sm text-success" id="high24h">—</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">24h Low</span>
-                        <span class="stat-value-sm text-danger" id="low24h">—</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Volatility</span>
-                        <span class="stat-value-sm" id="volatility">—</span>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Chart Section -->
-            <div class="chart-card card grid-span-12">
-                <div class="card-header">
-                    <h3 class="card-title">Price Chart</h3>
-                    <span class="text-secondary text-xs" id="chartPeriod">Historical Data</span>
+                <!-- Chart Section -->
+                <div class="chart-card card grid-span-12">
+                    <div class="card-header">
+                        <h3 class="card-title">Price Chart</h3>
+                        <span class="text-secondary text-xs" id="chartPeriod">Historical Data</span>
+                    </div>
+                    <div id="chart"></div>
                 </div>
-                <div id="chart"></div>
-            </div>
 
-            <!-- News Section -->
-            <div class="news-section card grid-span-12">
-                <div class="card-header">
-                    <h3 class="card-title">Market Intelligence</h3>
-                    <span class="text-secondary text-xs">Latest News & Analysis</span>
-                </div>
-                <div id="newsContainer" class="news-container">
-                    <!-- News articles will be inserted here -->
+                <!-- News Section -->
+                <div class="news-section card grid-span-12">
+                    <div class="card-header">
+                        <h3 class="card-title">Market Intelligence</h3>
+                        <span class="text-secondary text-xs">Latest News & Analysis</span>
+                    </div>
+                    <div id="newsContainer" class="news-container">
+                        <!-- News articles will be inserted here -->
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Error Message -->
-    <div id="errorContainer" class="error-container card hidden">
-        <div class="error-content">
-            <div class="error-icon">⚠</div>
-            <p id="errorMessage" class="error-text"></p>
-            <button class="btn btn-primary" onclick="document.getElementById('errorContainer').classList.add('hidden')">
-                Dismiss
-            </button>
+        <!-- Error Message -->
+        <div id="errorContainer" class="error-container card hidden">
+            <div class="error-content">
+                <div class="error-icon">⚠</div>
+                <p id="errorMessage" class="error-text"></p>
+                <button class="btn btn-primary"
+                    onclick="document.getElementById('errorContainer').classList.add('hidden')">
+                    Dismiss
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingContainer" class="loading-container card hidden">
+            <div class="loading-spinner"></div>
+            <p class="text-secondary">Analyzing market data...</p>
         </div>
     </div>
 
-    <!-- Loading State -->
-    <div id="loadingContainer" class="loading-container card hidden">
-        <div class="loading-spinner"></div>
-        <p class="text-secondary">Analyzing market data...</p>
-    </div>
-</div>
+    <script>
+        // Theme toggle functionality (same as main dashboard)
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
 
-<script type="module" src="scripts/stock_script.js"></script>
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const themeIcon = document.querySelector('.theme-icon');
+            if (themeIcon) {
+                themeIcon.textContent = theme === 'dark' ? '🌙' : '☀️';
+            }
+        }
+
+        // Initialize theme on page load
+        initTheme();
+
+        // Theme toggle button listener
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+    </script>
+    <script type="module" src="scripts/stock_script.js"></script>
 </body>
+
 </html>
