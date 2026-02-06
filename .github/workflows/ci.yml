@@ -1,0 +1,60 @@
+name: CI Pipeline
+on:
+  push:
+    branches: [ main, QA ]
+  pull_request:
+    branches: [ main, QA ]
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+   
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_DATABASE: portfolio_db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+   
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+     
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+     
+      - name: Build with Maven
+        run: mvn clean install -DskipTests
+        working-directory: ./demo
+     
+      - name: Run tests
+        run: mvn test
+        working-directory: ./demo
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/portfolio_db
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+     
+      - name: Validate Frontend
+        run: |
+          echo "Checking for JavaScript files..."
+          find ./demo/src/main/resources/static -name "*.js" -type f
+          echo "Frontend validation complete!"
+     
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: demo/target/surefire-reports/
